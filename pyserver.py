@@ -24,6 +24,7 @@ def ejercicio1():
 	try:
 		origen = data['origen']
 		destino = data['destino']
+
 		directions_result = gmaps.directions(origen, destino, mode="driving", departure_time=datetime.now())
 		json = jsonify(directions_result)
 		resp = 'Http 200{"ruta":['
@@ -36,11 +37,11 @@ def ejercicio1():
 				resp+= '{'+str(obj['start_location'])+','+str(obj['end_location'])+'}'
 				cont+=1
 		else:
-			return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente"}')
+			return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente y el formato JSON sea el correcto"}')
 		resp += ']'
 		return resp
-	except (KeyError, TypeError, ValueError):
-		return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente"}')
+	except (KeyError, TypeError, ValueError, Exception):
+		return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente y el formato JSON sea el correcto"}')
 @app.route('/ejercicio2', methods=['POST'])
 def ejercicio2():
 	data = request.get_json(force=True)
@@ -61,8 +62,8 @@ def ejercicio2():
 		resp += ']'
 		return resp
 		return jsonify(restaurants)
-	except (KeyError, TypeError, ValueError):
-		return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente"}')
+	except (KeyError, TypeError, ValueError, Exception):
+		return('Http 400{ "error":"No hay Resultados, Revise que la direccion este escrita correctamente y el formato JSON sea el correcto"}')
 @app.route('/ejercicio3', methods=['POST'])
 def ejercicio3():
 	data = request.get_json(force=True)
@@ -80,55 +81,70 @@ def ejercicio3():
 				r, g, b = img[x, y]
 				value = int((r + g + b)/3)
 				img[x, y] = (value, value, value)
-		pix.save("amo hacer tareas(Blanco Y Negro).bmp")
-		return jsonify(data)
-	except (KeyError, TypeError, ValueError):
-		return('Http 400{ "error":"No hay Resultados, Revise que la imagen no sea compresa y sea formato RGB 24-bits"}')
+		
+
+		strArr = filename.split('.')
+		newFilename = strArr[0]+"(Blanco Y Negro)."+strArr[1]
+		pix.save(newFilename)
+		buf = io.BytesIO()
+		pix.save(buf, format="BMP")
+		buf.seek(0)
+		img_bytes = buf.read()
+		base64_encoded_result_bytes = base64.b64encode(img_bytes)
+		base64_encoded_result_str = base64_encoded_result_bytes.decode('ascii')
+		res = 'Http 200{"nombre" : "'+newFilename+'","data": "'+base64_encoded_result_str+'"}'
+		return res 
+
+	except (KeyError, TypeError, ValueError, Exception):
+		return('Http 400{ "error":"No hay Resultados, Revise que la imagen no sea compresa y sea formato RGB 24-bits y el formato JSON sea el correcto"}')
 @app.route('/ejercicio4', methods=['POST'])
 def ejercicio4():
 	# print(request.get_json())
 	data = request.get_json(force=True)
-	# try:
-	rawImg = data['data']
-	imgdata = base64.b64decode(rawImg)
-	filename = data['nombre']  # I assume you have a way of picking unique filenames
-	with open(filename, 'wb') as f:
-		f.write(imgdata)
-	pix = Image.open(filename)
-	img = pix.load()
-	print ('width: %d - height: %d' % pix.size)
-	
-	newW = int(pix.size[0]/2)
-	newH = int(pix.size[1]/2)
-	finalFile = ''
-	contx = 0
-	conty = 0
-	while newW > data['tamaño']['ancho']:
-		newPix = Image.new( pix.mode , (newW, newH), (255, 255, 255))
-		newImage = newPix.load()
-		for y in range(0, newH- 1):
-			for x in range(0 ,newW - 1):
-				xTuple = tuple(map(operator.add, img[contx, conty], img[contx+1, conty]))
-				yTuple = tuple(map(operator.add, img[contx, conty+1], img[contx+1, conty+1]))
-				finalTuple = tuple(map(operator.add, xTuple, yTuple))
-				newImage[x, y] = (int(finalTuple[0]/4), int(finalTuple[1]/4), int(finalTuple[2]/4))
-				contx += 2
-				# print(xTuple, yTuple)
-			conty += 2
-			contx = 0
-		pix = newPix
-		newW = int(newW/2)
-		newH = int(newH/2)
-	pix.save("amo hacer tareas(Reducida).bmp")
-	buf = io.BytesIO()
-	pix.save(buf, format="BMP")
-	buf.seek(0)
-	img_bytes = buf.read()
-	base64_encoded_result_bytes = base64.b64encode(img_bytes)
-	base64_encoded_result_str = base64_encoded_result_bytes.decode('ascii')
-	return base64_encoded_result_str 
-	# except (KeyError, TypeError, ValueError):
-	# 	return('Http 400{ "error":"No hay Resultados, Revise que la imagen no sea compresa y sea formato RGB 24-bits"}')
+	try:
+		rawImg = data['data']
+		imgdata = base64.b64decode(rawImg)
+		filename = data['nombre']  # I assume you have a way of picking unique filenames
+		with open(filename, 'wb') as f:
+			f.write(imgdata)
+		pix = Image.open(filename)
+		img = pix.load()
+		print ('width: %d - height: %d' % pix.size)
+		
+		newW = int(pix.size[0]/2)
+		newH = int(pix.size[1]/2)
+		finalFile = ''
+		contx = 0
+		conty = 0
+		while newW > data['tamaño']['ancho']:
+			newPix = Image.new( pix.mode , (newW, newH), (255, 255, 255))
+			newImage = newPix.load()
+			for y in range(0, newH- 1):
+				for x in range(0 ,newW - 1):
+					xTuple = tuple(map(operator.add, img[contx, conty], img[contx+1, conty]))
+					yTuple = tuple(map(operator.add, img[contx, conty+1], img[contx+1, conty+1]))
+					finalTuple = tuple(map(operator.add, xTuple, yTuple))
+					newImage[x, y] = (int(finalTuple[0]/4), int(finalTuple[1]/4), int(finalTuple[2]/4))
+					contx += 2
+					# print(xTuple, yTuple)
+				conty += 2
+				contx = 0
+			pix = newPix
+			newW = int(newW/2)
+			newH = int(newH/2)
+		strArr = filename.split('.')
+		newFilename = strArr[0]+"(Reducida)."+strArr[1]
+		pix.save(newFilename)
+		buf = io.BytesIO()
+		pix.save(buf, format="BMP")
+		buf.seek(0)
+		img_bytes = buf.read()
+		base64_encoded_result_bytes = base64.b64encode(img_bytes)
+		base64_encoded_result_str = base64_encoded_result_bytes.decode('ascii')
+		res = 'Http 200{"nombre" : "'+newFilename+'","data": "'+base64_encoded_result_str+'"}'
+		return res 
+	except (KeyError, TypeError, ValueError, Exception):
+		return('Http 400{ "error":"No hay Resultados, Revise que la imagen no sea compresa y sea formato RGB 24-bits y el formato JSON sea el correcto"}')
 if __name__ == '__main__':
    app.run(port = 8080)
 
