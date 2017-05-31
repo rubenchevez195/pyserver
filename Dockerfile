@@ -14,5 +14,5 @@ RUN pip3 install pillow
 EXPOSE 8080
 
 
-CMD cd tarea2_lenguajes && python test.py
+CMD cd pyserver && python pyserver.py
 
