@@ -99,7 +99,7 @@ def ejercicio3():
 		return('Http 400{ "error":"No hay Resultados, Revise que la imagen no sea compresa y sea formato RGB 24-bits y el formato JSON sea el correcto"}')
 @app.route('/ejercicio4', methods=['POST'])
 def ejercicio4():
-	# print(request.get_json())
+	print("RECUERDE USAR LA Palabra tamano porque python da error con la letra ~n~ tildada")
 	data = request.get_json(force=True)
 	try:
 		rawImg = data['data']
@@ -116,7 +116,7 @@ def ejercicio4():
 		finalFile = ''
 		contx = 0
 		conty = 0
-		while newW > data['tamaño']['ancho']:
+		while newW > data['tamano']['ancho']:
 			newPix = Image.new( pix.mode , (newW, newH), (255, 255, 255))
 			newImage = newPix.load()
 			for y in range(0, newH- 1):
